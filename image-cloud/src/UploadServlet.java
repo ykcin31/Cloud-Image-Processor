@@ -15,6 +15,7 @@ import java.util.zip.*;
 // Uploads, extracts, and lists images contained in the user-selected .zip file. 
 // Draws interface for setting desired operations for each image.
 // Nick Wong
+
 @WebServlet("/UploadServlet")
 public class UploadServlet extends HttpServlet 
 {
