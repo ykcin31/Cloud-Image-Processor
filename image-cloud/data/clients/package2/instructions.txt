@@ -1,0 +1,2 @@
+lena_large.png <~> 0 <~> 1
+self-portrait-1907.jpg <~> 1 <~> 0
