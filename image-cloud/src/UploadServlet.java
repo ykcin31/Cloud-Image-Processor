@@ -21,9 +21,9 @@ public class UploadServlet extends HttpServlet
 	private static final long serialVersionUID = 1L;
 	
 	// Location to save .zip file and store image files
-	private final String FILEPATH = "C:\\Users\\Nick\\workspace\\imagecloud\\image-cloud\\data\\";
+	private final String FILEPATH = "C:\\Users\\Nick\\Desktop\\data\\";
 	// Location to save data that is larger than MAXMEMSIZE.
-	private final String TEMPPATH = "C:\\Users\\Nick\\workspace\\imagecloud\\image-cloud\\temp\\";
+	private final String TEMPPATH = "C:\\Users\\Nick\\Desktop\\data\\";
 	// Maximum file size to be uploaded.
 	private final int MAXFILESIZE = 100*1000000;
 	// Maximum size that will be stored in memory
@@ -33,6 +33,9 @@ public class UploadServlet extends HttpServlet
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
 	{
+		
+		System.out.println(FILEPATH);
+		
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 

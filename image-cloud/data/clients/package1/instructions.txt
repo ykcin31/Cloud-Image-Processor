@@ -1,3 +1,0 @@
-einstein2.jpg <~> 0 <~> 1
-hubble.jpg <~> 1 <~> 0
-lena.png <~> 1 <~> 0
