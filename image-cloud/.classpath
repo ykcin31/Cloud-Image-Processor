@@ -13,9 +13,9 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="lib" path="C:/Users/Nick/workspace/imagecloud/image-cloud/commons-fileupload-1.2.2/lib/commons-fileupload-1.2.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Nick/workspace/imagecloud/image-cloud/commons-io-2.1/commons-io-2.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Nick/workspace/imagecloud/image-cloud/commons-io-2.1/commons-io-2.1-javadoc.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Nick/workspace/imagecloud/image-cloud/commons-io-2.1/commons-io-2.1-sources.jar"/>
+	<classpathentry kind="lib" path="commons-fileupload-1.2.2/lib/commons-fileupload-1.2.2.jar"/>
+	<classpathentry kind="lib" path="commons-io-2.1/commons-io-2.1-javadoc.jar"/>
+	<classpathentry kind="lib" path="commons-io-2.1/commons-io-2.1-sources.jar"/>
+	<classpathentry kind="lib" path="commons-io-2.1/commons-io-2.1.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

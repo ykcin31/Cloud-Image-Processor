@@ -22,9 +22,9 @@ public class UploadServlet extends HttpServlet
 	private static final long serialVersionUID = 1L;
 	
 	// Location to save .zip file and store image files
-	private final String FILEPATH = "C:\\Users\\Nick\\Desktop\\data\\";
+	private final String FILEPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\";
 	// Location to save data that is larger than MAXMEMSIZE.
-	private final String TEMPPATH = "C:\\Users\\Nick\\Desktop\\data\\";
+	private final String TEMPPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\";
 	// Maximum file size to be uploaded.
 	private final int MAXFILESIZE = 100*1000000;
 	// Maximum size that will be stored in memory
