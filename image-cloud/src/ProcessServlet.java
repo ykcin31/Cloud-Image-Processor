@@ -19,6 +19,8 @@ public class ProcessServlet extends HttpServlet
 	final int BUFFER = 2048;
 	// Delimiter in instructions.txt
 	final String DELIMITER = " <~> ";
+	// Port number
+	final int PORT = 8080;
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
 	{
@@ -38,8 +40,17 @@ public class ProcessServlet extends HttpServlet
 			parcels = createParcels(listing);
 			packages = createPackages(parcels, directory);
 			// Submit packages for processing
-			Distributor d = new Distributor();
-			d.submit(packages);
+			/*
+			for (int i = 0; i < packages.size(); i++)
+			{
+				// Connect and send data to client
+				Jobber client = new Jobber(PORT);
+				String clientAddress = client.connectToClient();
+				client.sendJobToClient(packages.get(i));
+			}
+			*/
+			// Distributor d = new Distributor();
+			// d.submit(packages);
 			HtmlPrinter.processPage(out, listing, directory);
 			HtmlPrinter.footer(out);
 			out.close();
@@ -187,6 +198,7 @@ public class ProcessServlet extends HttpServlet
 			z.compress(files, zipDir);
 			packages.add(zipDir);
 			FileUtils.forceDelete(new File(txtDir));
+			System.out.println("Zip file created: " + zipDir);
 		}
 		return packages;
 	}
