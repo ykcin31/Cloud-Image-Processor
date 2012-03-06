@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.Socket;
 import java.util.*;
 
 import javax.servlet.*;
@@ -11,23 +12,28 @@ import org.apache.commons.io.FileUtils;
 public class ProcessServlet extends HttpServlet 
 {
 	private static final long serialVersionUID = 1L;
-	// Maximum individual image size [mb]
-	final float MAXIMAGE = 3;
-	// CAP on total memory of each parcel [mb]
-	final float CAP = 4;
+
+	// SETUP fields
+	//-----------------------------------------------------------------------------------------------------------------
+	// Enter maximum individual image size [mb]
+	private final float MAXIMAGE = 3;
+	// Enter maximum memory capacity each parcel [mb]
+	private final float CAP = 4;
+	// Enter port number
+	private final int PORT = 8080;
+	//-----------------------------------------------------------------------------------------------------------------
 	// Buffer size for zip compression
 	final int BUFFER = 2048;
-	// Delimiter in instructions.txt
+	// Enter delimiter in instructions.txt
 	final String DELIMITER = " <~> ";
-	// Port number
-	final int PORT = 8080;
-
+	
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
 	{
 		ArrayList<Job> listing = new ArrayList<Job>();
 		ArrayList<Parcel> parcels = new ArrayList<Parcel>();
 		String directory;
 		ArrayList<String> packages = new ArrayList<String>();
+		String completeDir = null;
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 		HtmlPrinter.header(out);
@@ -35,22 +41,26 @@ public class ProcessServlet extends HttpServlet
 		// Retrieve request data 
 		try
 		{
+			// Create packages to ship out to processor clients
 			directory = retrieveDirectory(request);
 			listing = retrieveList(request);
 			parcels = createParcels(listing);
 			packages = createPackages(parcels, directory);
+			completeDir = createCompleteFolder(directory);
 			// Submit packages for processing
-			/*
 			for (int i = 0; i < packages.size(); i++)
 			{
 				// Connect and send data to client
-				Jobber client = new Jobber(PORT);
-				String clientAddress = client.connectToClient();
-				client.sendJobToClient(packages.get(i));
+				ImageProcessorServer imps = new ImageProcessorServer(PORT);
+				imps.connectToClient();
+				String returnZip = imps.sendPackageToClient(packages.get(i));
+				// Processing complete, extract files, and update "status" and "destination" fields of Jobs
+				// Extract .zip folder containing processed images
+				Zipper z = new Zipper();
+				String destinationDir = z.extract(returnZip,completeDir);
+				updateParcel(parcels.get(i), destinationDir);
 			}
-			*/
-			// Distributor d = new Distributor();
-			// d.submit(packages);
+
 			HtmlPrinter.processPage(out, listing, directory);
 			HtmlPrinter.footer(out);
 			out.close();
@@ -61,6 +71,29 @@ public class ProcessServlet extends HttpServlet
 			HtmlPrinter.footer(out);
 			out.close();
 			System.out.println(ex);
+		}
+	}
+
+	// Creates a new directory for storing processed images
+	private String createCompleteFolder(String directory)
+	{
+		String dirName = directory + "complete\\";
+		File complete =  new File(dirName);
+		complete.mkdir();
+		return dirName;
+	}
+	
+	private void updateParcel(Parcel p, String destinationDir)
+	{
+		for(int i = 0; i < p.size(); i++)
+		{
+			Job j = p.getJob(i);
+			String address = j.getAddress();
+			String[] splits = address.split("\\\\");
+			String name = splits[splits.length-1];
+			String destination = destinationDir + name;
+			j.setDestination(destination);
+			j.setStatus(2);
 		}
 	}
 
@@ -202,7 +235,7 @@ public class ProcessServlet extends HttpServlet
 		}
 		return packages;
 	}
-	
+
 	// Writes and saves an instruction.txt file
 	private void writeInstructionTxt(Parcel p, String txtDir) throws IOException
 	{

@@ -7,16 +7,19 @@ import org.apache.commons.io.FileUtils;
 
 public class ImageProcessorClient 
 {
-	// Name of server
+	// SETUP fields
+	//-----------------------------------------------------------------------------------------------------------------
+	// Enter IP address of server
 	private final String SERVER = "server";
-	// Port number on server
+	// Enter port number on server
 	private final int PORT = 8080;
-	// Directory on client station to store data
+	// Enter directory on this station to store data
 	private final String FILEPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\clients\\";
-	// Buffer size
+	//-----------------------------------------------------------------------------------------------------------------
 	private final int BUFFER = 2048;
 	// Instructions.txt text delimiter
 	private final String DELIMITER = " <~> ";
+		
 	private Socket serverSocket;
 
 	public void main(String args[]) 
@@ -41,6 +44,7 @@ public class ImageProcessorClient
 				int[] operations = getInstructions(listing.get(i),txt);
 				for(int j = 0; j < operations.length; j++)
 				{
+					
 					//convert image to byte data
 					if(operations[j] == 1)
 					{
@@ -63,6 +67,8 @@ public class ImageProcessorClient
 			System.out.println("Exception " + e);
 		}
 	}
+	
+	// Connects to server socket
 
 	private Socket connectToServer() throws Exception
 	{
@@ -70,7 +76,8 @@ public class ImageProcessorClient
 		return serverSocket;
 	}
 
-	private String receivePackageFromServer() throws Exception
+	
+private String receivePackageFromServer() throws Exception
 	{
 		BufferedInputStream bis;
 		InputStream is = this.serverSocket.getInputStream();
@@ -106,6 +113,7 @@ public class ImageProcessorClient
 		return dirName;
 	}
 	
+	// Returns directory of extracted zip folder
 	private String extractPackage(String zipDir) throws IOException
 	{
 		Zipper z = new Zipper();
@@ -113,6 +121,7 @@ public class ImageProcessorClient
 		return packageDir;
 	}
 
+	// Returns a list of image file names on directory
 	private ArrayList<String> listImages(String dir)
 	{
 		File d = new File(dir);
@@ -133,6 +142,7 @@ public class ImageProcessorClient
 		return listing;
 	}
 
+	// Returns an int array indicating the operations to perform on corresponding "image" 
 	private int[] getInstructions(String image, String txt) throws NumberFormatException, IOException
 	{
 		String[] splits = image.split("\\\\");
@@ -141,7 +151,6 @@ public class ImageProcessorClient
 		BufferedReader bf = new BufferedReader(new FileReader(txt));
 		String line;
 		int[] operations = null;
-		int count = 0;
 		while ((line = bf.readLine()) != null)
 		{
 			String[] s = line.split(this.DELIMITER);

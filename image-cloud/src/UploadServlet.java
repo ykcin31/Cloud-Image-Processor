@@ -19,23 +19,25 @@ import java.util.zip.*;
 @WebServlet("/UploadServlet")
 public class UploadServlet extends HttpServlet 
 {
-	private static final long serialVersionUID = 1L;
-	
-	// Location to save .zip file and store image files
+	// SETUP fields
+	//-----------------------------------------------------------------------------------------------------------------
+	// Enter directory to save .zip file and store image files
 	private final String FILEPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\";
-	// Location to save data that is larger than MAXMEMSIZE.
+	// Enter directory to save data that is larger than MAXMEMSIZE.
 	private final String TEMPPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\";
-	// Maximum file size to be uploaded.
+	// Enter maximum file size to be uploaded.
 	private final int MAXFILESIZE = 100*1000000;
-	// Maximum size that will be stored in memory
+	// Enter maximum size that will be stored in memory
 	private final int MAXMEMSIZE = 100*1000000;
-	// Number of image processing operations
-	private final int OPERATIONS = 2;
+	// Enter number of image processing operations
+	private final int OPERATIONS = 2;	
+	//-----------------------------------------------------------------------------------------------------------------
+	private static final long serialVersionUID = 1L;
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
 	{
 		System.out.println(FILEPATH);
-		
+
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 
