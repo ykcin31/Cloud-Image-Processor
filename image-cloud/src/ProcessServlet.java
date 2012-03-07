@@ -1,11 +1,12 @@
 import java.io.*;
-import java.net.Socket;
+import java.net.ServerSocket;
 import java.util.*;
-
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.servlet.*;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
-
 import org.apache.commons.io.FileUtils;
 
 @WebServlet("/ProcessServlet")
@@ -16,17 +17,19 @@ public class ProcessServlet extends HttpServlet
 	// SETUP fields
 	//-----------------------------------------------------------------------------------------------------------------
 	// Enter maximum individual image size [mb]
-	private final float MAXIMAGE = 3;
+	private final float MAXIMAGE = 15;
 	// Enter maximum memory capacity each parcel [mb]
 	private final float CAP = 4;
 	// Enter port number
-	private final int PORT = 8080;
+	private final int PORT = 5555;
+	// Enter number of threads
+	private final int NTHREADS = 5;
 	//-----------------------------------------------------------------------------------------------------------------
 	// Buffer size for zip compression
 	final int BUFFER = 2048;
 	// Enter delimiter in instructions.txt
 	final String DELIMITER = " <~> ";
-	
+
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
 	{
 		ArrayList<Job> listing = new ArrayList<Job>();
@@ -37,8 +40,6 @@ public class ProcessServlet extends HttpServlet
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 		HtmlPrinter.header(out);
-		//---------------------------------------------------------------------------------------------------
-		// Retrieve request data 
 		try
 		{
 			// Create packages to ship out to processor clients
@@ -46,21 +47,50 @@ public class ProcessServlet extends HttpServlet
 			listing = retrieveList(request);
 			parcels = createParcels(listing);
 			packages = createPackages(parcels, directory);
+			System.out.println("Packages created: " + packages.toString());
 			completeDir = createCompleteFolder(directory);
+			System.out.println("ProcessServlet - Complete directory created: " + completeDir);
+			ServerSocket serverSocket = new ServerSocket(PORT);
 			// Submit packages for processing
+			ExecutorService pool = Executors.newFixedThreadPool(this.NTHREADS);
+			ArrayList<Callable<Object>> threads = new ArrayList<Callable<Object>>();
 			for (int i = 0; i < packages.size(); i++)
 			{
-				// Connect and send data to client
-				ImageProcessorServer imps = new ImageProcessorServer(PORT);
-				imps.connectToClient();
-				String returnZip = imps.sendPackageToClient(packages.get(i));
+				// Create a thread for each package
+				threads.add(Executors.callable(new ServerThread(packages.get(i), completeDir, serverSocket)));
+			}	
+			pool.invokeAll(threads);			
+			serverSocket.close();
+			for (int i = 0; i < packages.size(); i++)
+			{
 				// Processing complete, extract files, and update "status" and "destination" fields of Jobs
 				// Extract .zip folder containing processed images
 				Zipper z = new Zipper();
-				String destinationDir = z.extract(returnZip,completeDir);
-				updateParcel(parcels.get(i), destinationDir);
-			}
-
+				String name = packages.get(i);
+				String[] split = name.split("\\\\");
+				name = split[split.length-1];
+				String returnZip = completeDir + name;
+				// Check if file exists
+				File check = new File(returnZip);
+				if(check.exists())
+				{
+					try
+					{
+						String destinationDir = z.extract(returnZip, completeDir);
+						updateParcel(parcels.get(i), destinationDir);
+					}
+					catch (Exception e)
+					{
+						// Error in .zip extraction
+						updateParcel(parcels.get(i), null);
+					}
+				}				
+				else
+				{
+					// Error in .zip processing
+					updateParcel(parcels.get(i), null);
+				}
+			}	
 			HtmlPrinter.processPage(out, listing, directory);
 			HtmlPrinter.footer(out);
 			out.close();
@@ -73,36 +103,13 @@ public class ProcessServlet extends HttpServlet
 			System.out.println(ex);
 		}
 	}
-
-	// Creates a new directory for storing processed images
-	private String createCompleteFolder(String directory)
-	{
-		String dirName = directory + "complete\\";
-		File complete =  new File(dirName);
-		complete.mkdir();
-		return dirName;
-	}
-	
-	private void updateParcel(Parcel p, String destinationDir)
-	{
-		for(int i = 0; i < p.size(); i++)
-		{
-			Job j = p.getJob(i);
-			String address = j.getAddress();
-			String[] splits = address.split("\\\\");
-			String name = splits[splits.length-1];
-			String destination = destinationDir + name;
-			j.setDestination(destination);
-			j.setStatus(2);
-		}
-	}
-
+	// Retrieves directory name from Form data
 	private String retrieveDirectory(HttpServletRequest request) 
 	{
 		String directory = request.getParameter("directory");
 		return directory;
 	}
-
+	// Creates a collection of Jobs for the image files in the directory
 	private ArrayList<Job> retrieveList(HttpServletRequest request)
 	{
 		// Number of image files
@@ -138,33 +145,62 @@ public class ProcessServlet extends HttpServlet
 		}
 		return listing;
 	}
-
+	// Update the fields of the Jobs contained by the Parcel
+	private void updateParcel(Parcel p, String destinationDir)
+	{
+		for(int i = 0; i < p.size(); i++)
+		{
+			Job j = p.getJob(i);
+			if(destinationDir != null)
+			{
+			String address = j.getAddress();
+			String[] splits = address.split("\\\\");
+			String name = splits[splits.length-1];
+			String destination = destinationDir + name;
+			j.setDestination(destination);
+			j.setStatus(2);
+			}
+			else
+			{
+				j.setStatus(4);
+			}
+		}
+	}
+	// Checks which Jobs need to be processed and groups them into parcels
 	private ArrayList<Parcel> createParcels(ArrayList<Job> listing)
 	{
 		int count = listing.size();
 		ArrayList<Parcel> parcels = new ArrayList<Parcel>();
-		Parcel doNothing = new Parcel();
+		// Identify images that are too large
+		for(int i = 0; i < count; i++)
+		{
+			Job entry = listing.get(i);
+			float size = entry.getSize();
+			if(size > MAXIMAGE)
+			{
+				entry.setStatus(3);
+			}
+		}
 		// Identify images that don't need processing
 		for(int i = 0; i < count; i++)
 		{
 			Job entry = listing.get(i);
-			int[] operations = entry.getOperations();
-			int tally = 0;
-			for(int j=0; j < operations.length; j++)
+			if (entry.getStatus() == 0)
 			{
-				tally = tally + operations[j];
-			}
-			if(tally==0)
-			{
-				// Set status to 2 (Complete)
-				entry.setStatus(2);
-				entry.setDestination(entry.getAddress());
-				// Add to "Do Nothing" parcel
-				doNothing.addJob(entry);
-				entry.setParcel(0);
+				int[] operations = entry.getOperations();
+				int tally = 0;
+				for(int j=0; j < operations.length; j++)
+				{
+					tally = tally + operations[j];
+				}
+				if(tally==0)
+				{
+					// Set status to 2 (Complete)
+					entry.setStatus(2);
+					entry.setDestination(entry.getAddress());
+				}
 			}
 		}
-		parcels.add(doNothing);
 
 		// Submit other images to parcels for processing
 		Parcel p = new Parcel();
@@ -176,26 +212,19 @@ public class ProcessServlet extends HttpServlet
 			float size = entry.getSize();
 			if(status == 0)
 			{	
-				if(size > MAXIMAGE)
-				{
-					entry.setStatus(3);
+				// Check to see if there is room for more jobs in the current parcel
+				if((mem + size) > CAP)
+				{	
+					// Add parcel to the parcels arraylist
+					parcels.add(p);
+					// Reset temporary parcel and memory counter
+					p = new Parcel();
+					mem = 0;
 				}
-				else
-				{
-					// Check to see if there is room for more jobs in the current parcel
-					if((mem + size) > CAP)
-					{	
-						// Add parcel to the parcels arraylist
-						parcels.add(p);
-						// Reset temporary parcel and memory counter
-						p = new Parcel();
-						mem = 0;
-					}
-					entry.setStatus(1);
-					entry.setParcel(parcels.size()-1);
-					p.addJob(entry);
-					mem = mem + size; 
-				}
+				entry.setStatus(1);
+				entry.setParcel(parcels.size()-1);
+				p.addJob(entry);
+				mem = mem + size; 
 			}
 		}
 		if(p.size()>0)
@@ -204,12 +233,11 @@ public class ProcessServlet extends HttpServlet
 		}
 		return parcels;
 	}
-
 	// Create .zip files for each parcel containing image files and an instruction .txt file
 	private ArrayList<String> createPackages(ArrayList<Parcel> parcels, String directory) throws Exception
 	{
 		ArrayList<String> packages = new ArrayList<String>();
-		for(int i = 1; i < parcels.size(); i++)
+		for(int i = 0; i < parcels.size(); i++)
 		{
 			Parcel p = parcels.get(i);
 			// Write instructions.txt
@@ -231,11 +259,9 @@ public class ProcessServlet extends HttpServlet
 			z.compress(files, zipDir);
 			packages.add(zipDir);
 			FileUtils.forceDelete(new File(txtDir));
-			System.out.println("Zip file created: " + zipDir);
 		}
 		return packages;
 	}
-
 	// Writes and saves an instruction.txt file
 	private void writeInstructionTxt(Parcel p, String txtDir) throws IOException
 	{
@@ -257,5 +283,13 @@ public class ProcessServlet extends HttpServlet
 			output.newLine();
 		}
 		output.close();
+	}
+	// Creates a new directory for storing processed images
+	private String createCompleteFolder(String directory)
+	{
+		String dirName = directory + "complete\\";
+		File complete =  new File(dirName);
+		complete.mkdir();
+		return dirName;
 	}
 }

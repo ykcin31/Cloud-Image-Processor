@@ -33,7 +33,7 @@ public class Zipper
 			int dot = end.lastIndexOf(".");
 			String name = end.substring(0,dot);
 			dirName = filepath + name + "\\";
-			System.out.println(dirName);
+//			System.out.println(dirName);
 
 			File directory = new File(dirName);
 			if(directory.exists())
@@ -42,7 +42,7 @@ public class Zipper
 			}
 			if((new File(dirName)).mkdirs())
 			{
-				System.out.println("Created folder: " + dirName);
+//				System.out.println("Created folder: " + dirName);
 				FileInputStream fis = new FileInputStream(fileName);
 				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
 				ZipEntry entry;

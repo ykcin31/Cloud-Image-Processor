@@ -218,6 +218,12 @@ public class HtmlPrinter
 			out.println("<p>Image exceeds allowable file size</p>");
 			out.println("</td>");
 		}
+		if(status == 4)
+		{
+			out.println("<td>");
+			out.println("<p>Processing error</p>");
+			out.println("</td>");
+		}
 	}
 
 	// Print error message

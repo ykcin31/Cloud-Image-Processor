@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.util.*;
 
@@ -8,6 +9,9 @@ import javax.servlet.http.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.*;
 import org.apache.commons.fileupload.servlet.*;
+
+import javax.imageio.*;
+
 import org.apache.commons.io.FileUtils;
 
 import java.util.zip.*;
@@ -24,10 +28,10 @@ public class UploadServlet extends HttpServlet
 	// Enter directory to save .zip file and store image files
 	private final String FILEPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\";
 	// Enter directory to save data that is larger than MAXMEMSIZE.
-	private final String TEMPPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\data\\";
-	// Enter maximum file size to be uploaded.
+	private final String TEMPPATH = "C:\\Users\\Nick\\Desktop\\image-cloud\\temp\\";
+	// Enter maximum file size [bytes] to be uploaded.
 	private final int MAXFILESIZE = 100*1000000;
-	// Enter maximum size that will be stored in memory
+	// Enter maximum file size [bytes] that will be stored in memory
 	private final int MAXMEMSIZE = 100*1000000;
 	// Enter number of image processing operations
 	private final int OPERATIONS = 2;	
@@ -35,9 +39,7 @@ public class UploadServlet extends HttpServlet
 	private static final long serialVersionUID = 1L;
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
-	{
-		System.out.println(FILEPATH);
-
+	{		
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 
@@ -49,14 +51,30 @@ public class UploadServlet extends HttpServlet
 		if ((contentType.indexOf("multipart/form-data") >= 0)) 
 		{
 			try
-			{ 
+			{
+				// Create directories if necessary
+				File dataDir = new File(FILEPATH);
+				if (!dataDir.exists())
+				{
+					dataDir.mkdirs();
+					System.out.println("UploadServlet - Created folder: " + dataDir.toString());
+				}
+				File tempDir = new File(TEMPPATH);
+				if (!tempDir.exists())
+				{
+					tempDir.mkdirs();
+					System.out.println("UploadServlet - Created folder: " + tempDir.toString());
+				}
 				// Load file request
 				String fileName = loadFile(request);
-				// Extract the images in the .zip file
+				// Extract the images in the .zip file				
 				Zipper z = new Zipper();
 				String dirName = z.extract(fileName,FILEPATH);
+				System.out.println("UploadServlet - Created folder: " + dirName);
+
 				// Create collection of Jobs containing the image files contained in the loaded .zip file
 				ArrayList<Job> listing = listImages(dirName,OPERATIONS);
+				System.out.println("UploadServlet - Image files uploaded and extracted");
 				// Print table of image listing
 				HtmlPrinter.uploadPage(out, listing, dirName);
 				HtmlPrinter.footer(out);
@@ -77,7 +95,6 @@ public class UploadServlet extends HttpServlet
 			out.close();
 		}
 	}
-
 	// Save the requested file
 	private String loadFile(HttpServletRequest request) throws Exception
 	{
@@ -112,7 +129,6 @@ public class UploadServlet extends HttpServlet
 		}
 		return file.toString();
 	}
-
 	// Extract the images and return a list describing the images
 	private ArrayList<Job> listImages(String dirName, int opCount)
 	{
@@ -137,7 +153,7 @@ public class UploadServlet extends HttpServlet
 				int[] operations = new int[opCount];	
 				int status = 0;
 				int parcel = -1;
-				String destination = null;
+				String destination = address;
 				listing.add(new Job(address, size, operations, status, parcel, destination));	
 			}
 		}
