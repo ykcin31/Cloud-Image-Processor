@@ -1,31 +1,25 @@
 import java.util.*;
 
-public class Parcel 
-{
+public class Parcel {
 	private ArrayList<Job> listing;
-	
-	public Parcel()
-	{
+
+	public Parcel() {
 		this.listing = new ArrayList<Job>();
 	}
-	
-	public Job getJob(int i)
-	{
+
+	public Job getJob(int i) {
 		return listing.get(i);
 	}
-	
-	public void addJob(Job entry)
-	{
+
+	public void addJob(Job entry) {
 		listing.add(entry);
 	}
-	
-	public void clearAll()
-	{
+
+	public void clearAll() {
 		listing.clear();
 	}
-	
-	public int size()
-	{
+
+	public int size() {
 		return listing.size();
 	}
 }

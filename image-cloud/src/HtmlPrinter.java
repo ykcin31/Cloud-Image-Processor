@@ -13,6 +13,15 @@ public class HtmlPrinter
 		out.println("<html>");
 		out.println("<head>");
 		out.println("<meta charset=\"utf-8\">");
+		// CSS 
+		out.println("<style type = \"text/css\">");
+		out.println("body{font-family:georgia,sans-serif;text-align:center; background-color:whitesmoke}");
+		out.println("table{width:80%; margin-left:10%; margin-right:10%; align:center; border-collapse:collapse; border-bottom: 5px double black;}");
+		out.println("td{width:200px; height:300px; text-align:center; vertical-align:middle; border-bottom: 2px solid black;}");
+		out.println("th{width:200px; height:25px; text-align:center; vertical-align:middle; border-bottom: 5px double black;}");
+		out.println("</style>");
+	
+
 		out.println("<title>Cloud Image Processor</title>");
 		out.println("</head>");
 		out.println("<body>");
@@ -23,7 +32,7 @@ public class HtmlPrinter
 	public static void uploadPage(PrintWriter out, ArrayList<Job> listing, String directory) throws IOException
 	{
 		// Print table listing for images on "Upload" page
-		out.println("<h2>Select image processing operations:</h2>");
+		//out.println("<h2>Select image processing operations:</h2>");
 		// Create form and table entries
 		out.println("<form action=\"ProcessServlet\" method=\"post\">");
 		out.println("<input type=\"hidden\" name=\"directory\" value=\"" + directory + "\" />");
@@ -32,17 +41,17 @@ public class HtmlPrinter
 		// Print table header
 		out.println("<table>");
 		out.println("<tr>");
-		out.println("<th>Filename</th>");
-		out.println("<th>Thumbnail</th>");
-		out.println("<th>Filesize (MB)</th>");
+		//out.println("<th>Filename</th>");
+		out.println("<th></th>");
+		out.println("<th>File size (MB)</th>");
 		out.println("<th>Image Equalization</th>");
-		out.println("<th>Edge-detection</th>");
-		out.println("<th>Status</th>");
+		out.println("<th>Edge Detection</th>");
+		out.println("<th>Result</th>");
 		out.println("</tr>");
 		for (int i = 0; i < listing.size(); i++) 
 		{
 			out.println("<tr>");
-			tableName(out, listing.get(i));
+			//tableName(out, listing.get(i));
 			tableImg(out, listing.get(i));
 			tableSize(out, listing.get(i));
 			tableOptions(out, listing.get(i), i, 0);
@@ -59,10 +68,10 @@ public class HtmlPrinter
 	}
 
 	// Print body corresponding to UploadServlet
-	public static void processPage(PrintWriter out, ArrayList<Job> listing, String directory) throws IOException
+	public static void processPage(PrintWriter out, ArrayList<Job> listing, String directory, String dl) throws IOException
 	{
 		// Print table listing for images on "Upload" page
-		out.println("<h2>Processing:</h2>");
+		//out.println("<h2>Processing complete:</h2>");
 		// Create form and table entries
 		out.println("<form action=\"ProcessServlet\" method=\"post\">");
 		out.println("<input type=\"hidden\" name=\"directory\" value=\"" + directory + "\" />");
@@ -71,17 +80,17 @@ public class HtmlPrinter
 		// Print table header
 		out.println("<table>");
 		out.println("<tr>");
-		out.println("<th>Filename</th>");
-		out.println("<th>Thumbnail</th>");
-		out.println("<th>Filesize (MB)</th>");
-		out.println("<th>Image Equalization</th>");
-		out.println("<th>Edge-detection</th>");
-		out.println("<th>Status</th>");
+		//out.println("<th>Filename</th>");
+		out.println("<th></th>");
+		out.println("<th>File size (MB)</th>");
+		out.println("<th>Histogram Equalization</th>");
+		out.println("<th>Edge Detection</th>");
+		out.println("<th>Result</th>");
 		out.println("</tr>");
 		for (int i = 0; i < listing.size(); i++) 
 		{
 			out.println("<tr>");
-			tableName(out, listing.get(i));
+			//tableName(out, listing.get(i));
 			tableImg(out, listing.get(i));
 			tableSize(out, listing.get(i));
 			tableOptions(out, listing.get(i), i, 1);
@@ -93,9 +102,41 @@ public class HtmlPrinter
 		// Close table
 		out.println("</table>");
 		out.println("<br/>");
-		//out.println("<input type=\"submit\" value=\"Process\" />");
+
+		out.println("<h2>What would you like to do next?</h2>");
+		boolean retry = false;
+		for(int i = 0; i < listing.size(); i++)
+		{
+			if(listing.get(i).getStatus()==4)
+			{
+				retry = true;
+				break;
+			}
+		}
+		if(retry == true)
+		{
+			out.println("<input type = \"radio\" name=\"option\" value = \"Retry\" />");
+			out.println("Reprocess failed jobs<br/>");
+		}
+		boolean save = false;
+		for(int i = 0; i < listing.size(); i++)
+		{
+			if(listing.get(i).getStatus()==2)
+			{
+				save = true;
+				break;
+			}
+		}
+		if(save == true)
+		{
+			out.println("<a href=\"" + dl + "\">Download</a> processed images<br/>");
+		}
+		String add = "http://localhost:8080/image-cloud/Upload.html";
+		out.println("<a href=\"" + add + "\">Upload</a> another archive<br/><br/>");
+		out.println("<input type=\"submit\" value=\"Submit\" />");
 		out.println("</form>");
 	}
+
 
 	// Print hidden form data
 	private static void formData(PrintWriter out, Job entry, int i)
@@ -134,7 +175,7 @@ public class HtmlPrinter
 		out.println("<img src = "+ "\"http://localhost:8080/image-cloud/ViewImage?file=" + address +"\"" 
 				+ " alt = \"" + name + "\""
 				+ " title = \"" + name + "\""
-				+ " width = \"75\" />");
+				+ " width = \"200\" />");
 		out.println("</td>");
 	}
 
@@ -157,9 +198,15 @@ public class HtmlPrinter
 		{
 			for(int i = 0; i < n; i++)
 			{
+				String script = " onmousedown=\"this.__chk = this.checked\" onclick=\"if (this.__chk) this.checked = false\"";
+						
 				out.println("<td>");
-				out.println("<input type = \"checkbox\" name=\"operations" + row + "\""
-						+ " value = \"" + Integer.toString(i) + "\" />");
+				out.println("<input type = \"radio\" name=\"operations" + row + "\""
+						+ " value = \"" + Integer.toString(i) + "\"" + script + "\"/>");
+				
+				
+				
+				
 				out.println("</td>");
 			}
 		}
@@ -170,11 +217,11 @@ public class HtmlPrinter
 				out.println("<td>");
 				if(operations[i] == 0)
 				{
-					out.println("<input type = \"checkbox\" disabled = \"disabled\"/>");
+					out.println("<input type = \"radio\" disabled = \"disabled\"/>");
 				}
 				if(operations[i] == 1)
 				{
-					out.println("<input type = \"checkbox\" disabled = \"disabled\" checked = \"yes\"/>");
+					out.println("<input type = \"radio\" disabled = \"disabled\" checked = \"yes\"/>");
 					out.println("<input type=\"hidden\" name=\"operations" + row + "\" value=\"" + Integer.toString(i) + "\"/>");		
 				}
 				out.println("</td>");
@@ -191,13 +238,18 @@ public class HtmlPrinter
 		if(status == 0)
 		{
 			out.println("<td>");
-			out.println("<p>Waiting</p>");
+			out.println("<p>Uploaded</p>");
 			out.println("</td>");
 		}
 		if(status == 1)
 		{
+			String address = entry.getDestination();
+			String name = abbreviate(address);
+
 			out.println("<td>");
-			out.println("<p>Processing...</p>");
+			out.println("<img src = "+ "\"http://localhost:8080/image-cloud/ViewImage?file=" + address +"\"" 
+					+ " alt = \"" + name + "\"" 
+					+ " width = \"200\" />");
 			out.println("</td>");
 		}
 		if(status == 2)
@@ -208,9 +260,8 @@ public class HtmlPrinter
 			out.println("<td>");
 			out.println("<img src = "+ "\"http://localhost:8080/image-cloud/ViewImage?file=" + address +"\"" 
 					+ " alt = \"" + name + "\"" 
-					+ " width = \"75\" />");
+					+ " width = \"200\" />");
 			out.println("</td>");
-
 		}
 		if(status == 3)
 		{
