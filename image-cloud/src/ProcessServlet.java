@@ -40,6 +40,7 @@ public class ProcessServlet extends HttpServlet {
 		String completeDir = null;
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
+		HtmlPrinter page = new HtmlPrinter();
 		String dl = null;
 		try {
 			// Create packages to ship out to processor clients
@@ -94,13 +95,13 @@ public class ProcessServlet extends HttpServlet {
 				printToConsole(completeDir);
 				dl = zipCompleteFolder(completeDir);
 			}
-			HtmlPrinter.header(out);
-			HtmlPrinter.processPage(out, listing, directory, dl);
-			HtmlPrinter.footer(out);
+			page.header(out);
+			page.processPage(out, listing, directory, dl);
+			page.footer(out);
 			out.close();
 		} catch (Exception e) {
-			HtmlPrinter.error(out, 0, e);
-			HtmlPrinter.footer(out);
+			page.error(out, 0, e);
+			page.footer(out);
 			out.close();
 			e.printStackTrace();
 		}

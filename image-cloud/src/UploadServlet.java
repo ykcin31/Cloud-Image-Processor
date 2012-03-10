@@ -40,6 +40,7 @@ public class UploadServlet extends HttpServlet {
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 
+		HtmlPrinter page = new HtmlPrinter();
 		// Upload file
 		// Verify the content type of request
 		String contentType = request.getContentType();
@@ -71,19 +72,19 @@ public class UploadServlet extends HttpServlet {
 				printToConsole("UploadServlet - Image files uploaded and extracted");
 
 				// Print HTML
-				HtmlPrinter.header(out);
-				HtmlPrinter.uploadPage(out, listing, dirName);
-				HtmlPrinter.footer(out);
+				page.header(out);
+				page.uploadPage(out, listing, dirName);
+				page.footer(out);
 				out.close();
 			} catch (Exception ex) {
-				HtmlPrinter.error(out, 0, ex);
-				HtmlPrinter.footer(out);
+				page.error(out, 0, ex);
+				page.footer(out);
 				out.close();
 				ex.printStackTrace();
 			}
 		} else {
-			HtmlPrinter.error(out, 0);
-			HtmlPrinter.footer(out);
+			page.error(out, 0);
+			page.footer(out);
 			out.close();
 		}
 	}

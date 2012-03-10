@@ -55,7 +55,7 @@ public class Zipper {
 				}
 				zis.close();
 				// Delete .zip file
-				//FileUtils.forceDelete(new File(fileName));
+				FileUtils.forceDelete(new File(fileName));
 			}
 		}
 		return dirName;
