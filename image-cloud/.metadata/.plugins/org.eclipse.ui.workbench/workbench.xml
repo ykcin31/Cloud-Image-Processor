@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workbench progressCount="41" version="2.0">
+<workbench progressCount="43" version="2.0">
 <workbenchAdvisor/>
-<window height="768" width="1024" x="132" y="104">
+<window height="768" maximized="true" width="1024" x="132" y="104">
 <fastViewData fastViewLocation="1024"/>
 <intro standby="true"/>
 <perspectiveBar>
